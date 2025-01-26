@@ -8,4 +8,4 @@ I have not and I'm not planning to create a stable release for this project for 
 2. It is highly suggested to edit the code to match your server scopes
 Due to this, to implement this you need a Java compiler (personally I use Intellij IDEA), compile the project and add it to your server in the /plugins folder.
 # Other notes
-Please consider that this plugin is created to be used in an Italian server, so any String is written in Italian.
+Please consider that this plugin is created to be used in an Italian server, so any String is written in Italian and I've not implemented any automatic translation features because I don't need to.

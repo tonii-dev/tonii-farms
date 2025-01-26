@@ -73,20 +73,49 @@ public class ServerPlayer {
     }
 
     /**
-     * Starts a task loop for adding tasks to the provided list.
+     * Starts a repeating task loop that adds tasks to the provided task list, ensuring that no duplicate tasks
+     * (based on certain criteria) are added. The loop will stop once the task list reaches the specified maximum size.
      *
-     * @param taskList    The list to add tasks to.
-     * @param maxTasks    The maximum number of tasks allowed.
-     * @param taskFactory A factory method to create new tasks.
-     * @param <T>         The type of task.
+     * @param taskList The list of tasks to add new tasks to.
+     * @param maxTasks The maximum number of tasks allowed in the list.
+     * @param taskFactory A factory responsible for creating new tasks of type T.
+     * @param <T> The type of task being added (either SingleTask or MultipleTask).
      */
     private <T> void startTaskLoop(List<T> taskList, int maxTasks, TaskFactory<T> taskFactory) {
         new BukkitRunnable() {
             @Override
             public void run() {
+                // Only proceed if the task list has fewer tasks than the maximum allowed
                 if (taskList.size() < maxTasks) {
-                    T newTask = taskFactory.create();
-                    if (!taskList.contains(newTask)) {
+                    T newTask = taskFactory.create(); // Create a new task using the factory
+                    boolean isUnique = true; // Flag to check if the task is unique
+
+                    // Check if the task is a SingleTask and validate uniqueness
+                    if (newTask instanceof SingleTask) {
+                        for (SingleTask task : getSingleTasks()) {
+                            // Check if a task with the same material and client name exists
+                            if (task.getMaterial().equals(((SingleTask) newTask).getMaterial())
+                                    && task.getClientName().equals(((SingleTask) newTask).getClientName())) {
+                                isUnique = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Check if the task is a MultipleTask and validate uniqueness
+                    if (newTask instanceof MultipleTask) {
+                        for (MultipleTask task : getMultipleTasks()) {
+                            // Check if a task with the same tasks and client exists
+                            if (task.getTasks().equals(((MultipleTask) newTask).getTasks())
+                                    && task.getClient().equals(((MultipleTask) newTask).getClient())) {
+                                isUnique = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    // If the task is unique, add it to the task list
+                    if (isUnique) {
                         taskList.add(newTask);
                     }
                 }
@@ -260,7 +289,7 @@ public class ServerPlayer {
                     task.complete((Player) e.getWhoClicked());
                 });
 
-        return new MultipleInventoryFactory(items, factory)
+        return new MultipleInventoryFactory(items, factory, plugin)
                 .get();
     }
 
@@ -287,7 +316,7 @@ public class ServerPlayer {
                     task.complete((Player) e.getWhoClicked());
                 });
 
-        return new MultipleInventoryFactory(items, factory)
+        return new MultipleInventoryFactory(items, factory, plugin)
                 .get();
     }
 
@@ -327,5 +356,22 @@ public class ServerPlayer {
         }
 
         return null;
+    }
+
+    /**
+     * Removes a task from the player's task list.
+     * This method checks whether the given task is a SingleTask or a MultipleTask
+     * and removes it from the corresponding task list.
+     *
+     * @param task the task to be removed, either a SingleTask or a MultipleTask.
+     * @return the current instance of ServerPlayer for method chaining.
+     */
+    public ServerPlayer removeTask(GameTask task) {
+        if (task instanceof SingleTask singleTask) {
+            singleTasks.remove(singleTask);
+        } else if (task instanceof MultipleTask multipleTask) {
+            multipleTasks.remove(multipleTask);
+        }
+        return this;
     }
 }

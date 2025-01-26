@@ -56,11 +56,6 @@ public class InventoryUtils {
                 player.getInventory().remove(itemStack);
             }
         }
-
-        // If there's still remaining amount after loop, log a warning
-        if (amount > 0) {
-            player.sendMessage("Not enough items to remove.");
-        }
     }
 
     /**

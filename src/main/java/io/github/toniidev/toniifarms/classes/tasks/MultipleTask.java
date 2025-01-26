@@ -1,5 +1,6 @@
 package io.github.toniidev.toniifarms.classes.tasks;
 
+import io.github.toniidev.toniifarms.classes.server.ServerPlayer;
 import io.github.toniidev.toniifarms.dynamic.DefaultList;
 import io.github.toniidev.toniifarms.factories.ItemStackFactory;
 import io.github.toniidev.toniifarms.utils.StringUtils;
@@ -109,6 +110,7 @@ public class MultipleTask extends GameTask {
             totalItemsSold += task.getAmount();
         }
 
+        ServerPlayer.getInstance(player).removeTask(this);
         player.sendMessage(StringUtils.formatColorCodes('&',
                 "&e[Vendita] &aSuccesso: &7Hai venduto &f" + totalItemsSold +
                         "&7 oggetti per &f" + totalReward + "$&7."));
@@ -124,14 +126,16 @@ public class MultipleTask extends GameTask {
                 .addLoreLine("Hai una richiesta di consegna!")
                 .addBlankLoreLine();
 
-        for(SingleTask task : this.getTasks()){
-            factory.addLoreLine(StringUtils.formatColorCodes('&', (task.canComplete(player) ? "&a" : "&c") + task.getAmount() + "x &e" + task.getRequestName()));
+        for (SingleTask task : this.getTasks()) {
+            factory.addLoreLine(StringUtils.formatColorCodes('&', "&e" + task.getAmount() + "x &a" + task.getRequestName() + " " +
+                    (task.canComplete(player) ? "&a✔" : "&c❌")));
         }
 
-        return factory.addBlankLoreLine()
+        factory.addBlankLoreLine()
                 .addLoreLine(StringUtils.formatColorCodes('&', "&fRicompensa: &6" + this.getReward() + "$"))
                 .addBlankLoreLine()
-                .addLoreLine(StringUtils.formatColorCodes('&', "&eClicca per saperne di più!"))
-                .get();
+                .addLoreLine(StringUtils.formatColorCodes('&', (this.canComplete(player) ? "&eClicca per accettare!" : "&cNon hai abbastanza oggetti!")));
+
+        return factory.get();
     }
 }

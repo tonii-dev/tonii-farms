@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DefaultList {
-    public static List<String> CLIENT_NAMES = List.of("Greg", "Tom", "Bartolo", "Lucia", "Amanda", "Armando",
+    public static List<String> CLIENT_NAMES = List.of("Greg", "Tom", "Bartolo", "Lucia", "Amanda", "Armandino",
             "Pietro", "Heidi", "Gerardo", "Massimo", "Salvatore", "Gennaro",
             "Christian", "Antonio", "Angelo", "Andrea", "Alice", "Bob",
             "Niccolò", "Shippino", "Nicolino", "Raffaele", "Claudio", "Sceriffo");

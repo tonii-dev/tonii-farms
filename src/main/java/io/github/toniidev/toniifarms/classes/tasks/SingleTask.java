@@ -3,6 +3,7 @@ package io.github.toniidev.toniifarms.classes.tasks;
 import io.github.toniidev.toniifarms.classes.server.ServerPlayer;
 import io.github.toniidev.toniifarms.dynamic.DefaultList;
 import io.github.toniidev.toniifarms.factories.ItemStackFactory;
+import io.github.toniidev.toniifarms.utils.IntegerUtils;
 import io.github.toniidev.toniifarms.utils.InventoryUtils;
 import io.github.toniidev.toniifarms.utils.StringUtils;
 import org.bukkit.Material;
@@ -91,7 +92,7 @@ public class SingleTask extends GameTask {
      * @return The reward for completing the task.
      */
     public double getReward() {
-        return reward;
+        return IntegerUtils.roundCompletely(reward);
     }
 
     /**
@@ -121,11 +122,12 @@ public class SingleTask extends GameTask {
     public void complete(Player player) {
         if (canComplete(player)) {
             InventoryUtils.removeItems(this.getMaterial(), this.getAmount(), player);
-            ServerPlayer.getInstance(player).addMoney(this.getReward());
-
-            player.sendMessage(StringUtils.formatColorCodes('&', "&e[Vendita] &aSuccesso: &7Hai venduto &f" + this.getRequestName() + "&7 per &f"
-                    + this.getReward() + "$&7."));
-        } else player.sendMessage(StringUtils.formatColorCodes('&', "&e[Vendita] &cErrore: &7Non hai abbastanza oggetti per poter completare questo incarico."));
+            ServerPlayer.getInstance(player).addMoney(this.getReward())
+                    .removeTask(this);
+            player.sendMessage(StringUtils.formatColorCodes('&', "&e[Vendita] &aSuccesso: &7Hai venduto &f" + this.getAmount() + "x "
+                    + this.getRequestName() + "&7 per &f" + this.getReward() + "$&7."));
+        } else
+            player.sendMessage(StringUtils.formatColorCodes('&', "&e[Vendita] &cErrore: &7Non hai abbastanza oggetti per poter completare questo incarico."));
     }
 
     /**
@@ -136,7 +138,7 @@ public class SingleTask extends GameTask {
      */
     @Override
     public ItemStack getIcon(Player player) {
-        return new ItemStackFactory(new ItemStack(this.getMaterial(), this.getAmount()))
+        ItemStackFactory factory = new ItemStackFactory(new ItemStack(this.getMaterial(), this.getAmount()))
                 .setName(StringUtils.formatColorCodes('&', "&e" + this.getAmount() +
                         "x &a" + this.getRequestName()))
                 .addLoreLine(StringUtils.formatColorCodes('&', "&8" + this.getClientName()))
@@ -148,8 +150,9 @@ public class SingleTask extends GameTask {
                 .addLoreLine(StringUtils.formatColorCodes('&', "&fQuantità: " + (this.canComplete(player) ? "&a" : "&c") +
                         this.getAmount() + "x"))
                 .addBlankLoreLine()
-                .addLoreLine(StringUtils.formatColorCodes('&', "&eClicca per saperne di più!"))
-                .get();
+                .addLoreLine(StringUtils.formatColorCodes('&', (this.canComplete(player) ? "&eClicca per accettare!" : "&cNon hai abbastanza oggetti!")));
+
+        return factory.get();
     }
 
     /**

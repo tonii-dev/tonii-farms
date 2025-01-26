@@ -2,3 +2,10 @@ name: tonii-farms
 version: '1.0-SNAPSHOT'
 main: io.github.toniidev.toniifarms.ToniiFarms
 api-version: '1.21'
+commands:
+  consegne:
+    description: Mostra la lista delle consegne da fare
+    usage: /<command>
+  richieste:
+    description: Mostra la lista delle richieste degli NPC
+    usage: /<command>

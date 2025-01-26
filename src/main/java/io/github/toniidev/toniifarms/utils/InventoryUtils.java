@@ -3,6 +3,7 @@ package io.github.toniidev.toniifarms.utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -61,4 +62,20 @@ public class InventoryUtils {
             player.sendMessage("Not enough items to remove.");
         }
     }
+
+    /**
+     * Checks whether the clicked inventory and the current item in the inventory click event are non-null.
+     * This method ensures that both the clicked inventory and the current item are valid for further processing.
+     *
+     * @param e The InventoryClickEvent that triggered the check.
+     * @return true if both the clicked inventory and the current item are non-null, false otherwise.
+     */
+    public static boolean checkPresence(InventoryClickEvent e) {
+        if (e.getClickedInventory() == null) return false;
+
+        if (e.getCurrentItem() == null) return false;
+
+        return true;
+    }
+
 }

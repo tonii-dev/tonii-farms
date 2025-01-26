@@ -1,14 +1,21 @@
 package io.github.toniidev.toniifarms.classes.server;
 
+import io.github.toniidev.toniifarms.classes.tasks.GameTask;
 import io.github.toniidev.toniifarms.classes.tasks.MultipleTask;
 import io.github.toniidev.toniifarms.classes.tasks.SingleTask;
+import io.github.toniidev.toniifarms.factories.InventoryFactory;
+import io.github.toniidev.toniifarms.factories.MultipleInventoryFactory;
+import io.github.toniidev.toniifarms.utils.InventoryUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
 public class ServerPlayer {
     private static final List<ServerPlayer> players = new ArrayList<>();
@@ -228,5 +235,97 @@ public class ServerPlayer {
         }
         this.money -= amount;
         return this;
+    }
+
+    /**
+     * Creates and returns an inventory displaying the player's current multiple tasks,
+     * with each task represented by its corresponding icon. The inventory allows
+     * the player to interact with the tasks and complete them.
+     *
+     * @return The inventory representing the player's delivery tasks.
+     */
+    public Inventory getMultipleTasksInventory() {
+        List<ItemStack> items = new ArrayList<>();
+        for (MultipleTask task : this.getMultipleTasks()) {
+            items.add(task.getIcon(this.getPlayer()));
+        }
+
+        InventoryFactory factory = new InventoryFactory(6, "Consegne", plugin)
+                .setClicksAllowed(false)
+                .setGlobalAction(e -> {
+                    if(!InventoryUtils.checkPresence(e)) return;
+
+                    MultipleTask task = (MultipleTask) reverse(e.getCurrentItem());
+                    if(task == null) return;
+                    task.complete((Player) e.getWhoClicked());
+                });
+
+        return new MultipleInventoryFactory(items, factory)
+                .get();
+    }
+
+    /**
+     * Creates and returns an inventory displaying the player's current single tasks,
+     * with each task represented by its corresponding icon. The inventory allows
+     * the player to interact with the tasks and complete them.
+     *
+     * @return The inventory representing the player's single tasks.
+     */
+    public Inventory getSingleTasksInventory(){
+        List<ItemStack> items = new ArrayList<>();
+        for (SingleTask task : this.getSingleTasks()) {
+            items.add(task.getIcon(this.getPlayer()));
+        }
+
+        InventoryFactory factory = new InventoryFactory(6, "Consegne", plugin)
+                .setClicksAllowed(false)
+                .setGlobalAction(e -> {
+                    if(!InventoryUtils.checkPresence(e)) return;
+
+                    SingleTask task = (SingleTask) reverse(e.getCurrentItem());
+                    if(task == null) return;
+                    task.complete((Player) e.getWhoClicked());
+                });
+
+        return new MultipleInventoryFactory(items, factory)
+                .get();
+    }
+
+    /**
+     * Checks if the given ItemStack corresponds to any of the task icons for the player.
+     * This method checks both SingleTask and MultipleTask icons to see if the player's
+     * task icons match the provided ItemStack.
+     *
+     * @param task The ItemStack to check against the task icons.
+     * @return true if the provided task icon matches any of the player's tasks, false otherwise.
+     */
+    public boolean isPlayerTaskIcon(ItemStack task) {
+        return Stream.concat(
+                        this.getMultipleTasks().stream(),
+                        this.getSingleTasks().stream())
+                .anyMatch(taskItem -> taskItem.getIcon(this.getPlayer()).equals(task));
+    }
+
+    /**
+     * Reverses the task associated with the given ItemStack, determining whether it corresponds to
+     * a SingleTask or MultipleTask for the player. If the itemStack matches a task icon,
+     * the method will return the corresponding task.
+     *
+     * @param itemStack The ItemStack to check for a matching task icon.
+     * @return The task associated with the ItemStack, either a SingleTask or MultipleTask,
+     *         or null if no matching task is found.
+     */
+    public GameTask reverse(ItemStack itemStack) {
+        if (!isPlayerTaskIcon(itemStack)) return null;
+
+        for (MultipleTask t : this.getMultipleTasks()) {
+            if (t.getIcon(this.getPlayer()).equals(itemStack)) return t;
+        }
+
+        for (SingleTask t : this.getSingleTasks()) {
+            if (t.getIcon(this.getPlayer()).equals(itemStack)) return t;
+        }
+
+        return null;
     }
 }

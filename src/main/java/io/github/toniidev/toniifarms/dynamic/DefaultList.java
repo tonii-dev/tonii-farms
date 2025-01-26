@@ -10,7 +10,7 @@ public class DefaultList {
     public static List<String> CLIENT_NAMES = List.of("Greg", "Tom", "Bartolo", "Lucia", "Amanda", "Armando",
             "Pietro", "Heidi", "Gerardo", "Massimo", "Salvatore", "Gennaro",
             "Christian", "Antonio", "Angelo", "Andrea", "Alice", "Bob",
-            "Niccolò");
+            "Niccolò", "Shippino", "Nicolino", "Raffaele", "Claudio", "Sceriffo");
     public static List<String> DESTINATION_NAMES = List.of("Asilo", "Scuola elementare", "Scuola media", "Chiesa",
             "Comune", "Centro anziani", "Parco giochi", "Stadio");
 

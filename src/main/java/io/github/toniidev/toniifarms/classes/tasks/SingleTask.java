@@ -10,13 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Random;
-
 import java.util.concurrent.ThreadLocalRandom;
-
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 public class SingleTask extends GameTask {
     private static final int MIN_AMOUNT = 1;
@@ -155,6 +149,20 @@ public class SingleTask extends GameTask {
         return factory.get();
     }
 
+    @Override
+    public String toString() {
+        return "singletask" + "@" + this.material.name() + "," + this.amount + "," + this.requestName + "," +
+                this.reward + "," + this.clientName;
+    }
+
+    public SingleTask(Material material, String requestName, int amount, double reward, String clientName) {
+        this.material = material;
+        this.requestName = requestName;
+        this.amount = amount;
+        this.reward = reward;
+        this.clientName = clientName;
+    }
+
     /**
      * Generates a random amount of material required for the task.
      *
@@ -184,5 +192,7 @@ public class SingleTask extends GameTask {
                 ThreadLocalRandom.current().nextInt(DefaultList.CLIENT_NAMES.size())
         );
     }
+
+
 }
 

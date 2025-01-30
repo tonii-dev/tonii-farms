@@ -138,4 +138,21 @@ public class MultipleTask extends GameTask {
 
         return factory.get();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("multitask#");
+        for(SingleTask task : this.getTasks()){
+            stringBuilder.append(task.toString() + ";");
+        }
+
+        stringBuilder.append(":" + this.getClient());
+        return stringBuilder.toString();
+    }
+
+    public MultipleTask(List<SingleTask> tasks, String client) {
+        this.tasks = tasks;
+        this.client = client;
+    }
 }

@@ -1,11 +1,9 @@
 package io.github.toniidev.toniifarms.factories;
 
-import io.github.toniidev.toniifarms.utils.InventoryUtils;
 import io.github.toniidev.toniifarms.utils.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +16,11 @@ public class MultipleInventoryFactory {
     /// This list contains all the pages of the MultipleInventory
     private final List<Inventory> pages = new ArrayList<>();
 
+    int[] airSlots = {2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 25, 29,
+            30, 31, 32, 33, 34, 38, 39, 40, 41, 42, 43, 47, 48, 49, 50, 51, 52};
+
+    private final InventoryFactory baseFactory;
+
     /**
      * Creates a blank MultipleInventoryFactory instance.
      *
@@ -25,10 +28,8 @@ public class MultipleInventoryFactory {
      *                     every group of 21 Items will be displayed in his own page
      * @param startFactory The InventoryFactory on which this MultipleInventoryFactory instance should be based on
      */
-    public MultipleInventoryFactory(List<ItemStack> items, InventoryFactory startFactory, Plugin plugin) {
-        int[] airSlots = {2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 25, 29,
-                30, 31, 32, 33, 34, 38, 39, 40, 41, 42, 43, 47, 48, 49, 50, 51, 52};
-
+    public MultipleInventoryFactory(List<ItemStack> items, InventoryFactory startFactory) {
+        this.baseFactory = startFactory;
         int totalPages = (int) Math.ceil((double) items.size() / airSlots.length);
 
         for (int i = 0; i < totalPages; i++) {
@@ -36,7 +37,9 @@ public class MultipleInventoryFactory {
             int endIndex = Math.min(startIndex + airSlots.length, items.size());
             List<ItemStack> itemsToDisplayInThisPage = items.subList(startIndex, endIndex);
 
-            InventoryFactory factory = new InventoryFactory(InventoryUtils.cloneInventory(startFactory.get(), startFactory.getTitle()), plugin);
+            InventoryFactory factory = startFactory.clone();
+
+            //InventoryFactory factory = new InventoryFactory(InventoryUtils.cloneInventory(startFactory.get(), startFactory.getTitle()), startFactory.getMainPluginInstance());
 
             factory.fill(new ItemStackFactory(Material.BLACK_STAINED_GLASS_PANE)
                     .setName(" ").get());
@@ -45,11 +48,24 @@ public class MultipleInventoryFactory {
                 factory.setItem(slot, new ItemStack(Material.AIR));
             }
 
-            factory.addItem(itemsToDisplayInThisPage);
+            factory.addItem(itemsToDisplayInThisPage, true);
             setPageNavigationItems(i, totalPages, factory);
 
             pages.add(factory.get());
         }
+    }
+
+    private InventoryFactory createTemplate(){
+        InventoryFactory clone = baseFactory.clone();
+
+        clone.fill(new ItemStackFactory(Material.BLACK_STAINED_GLASS_PANE)
+                .setName(" ").get());
+
+        for(int slot : airSlots){
+            clone.setItem(slot, new ItemStack(Material.AIR));
+        }
+
+        return clone;
     }
 
     /**
@@ -66,9 +82,7 @@ public class MultipleInventoryFactory {
                 .get());
 
         if (pageNumber > 0) {
-            template.setAction(27, e -> {
-                e.getWhoClicked().openInventory(pages.get(pageNumber - 1));
-            });
+            template.setAction(27, e -> e.getWhoClicked().openInventory(pages.get(pageNumber - 1)));
             template.setItem(27, new ItemStackFactory(Material.ARROW)
                     .setName(StringUtils.formatColorCodes('&', "&cPagina precedente"))
                     .addLoreLine(StringUtils.formatColorCodes('&', String.format("Torna a pagina &e%d", pageNumber)))
@@ -85,6 +99,6 @@ public class MultipleInventoryFactory {
     }
 
     public Inventory get() {
-        return pages.isEmpty() ? null : pages.getFirst();
+        return pages.isEmpty() ? createTemplate().get() : pages.getFirst();
     }
 }

@@ -1,5 +1,6 @@
 package io.github.toniidev.toniifarms;
 
+import io.github.toniidev.toniifarms.classes.server.ServerPlayer;
 import io.github.toniidev.toniifarms.commands.ShowMultipleTasks;
 import io.github.toniidev.toniifarms.commands.ShowSingleTasks;
 import io.github.toniidev.toniifarms.factories.InputFactory;
@@ -14,6 +15,10 @@ public final class ToniiFarms extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
+
+        InitializeUtils.setMainInstance(this);
+
+        ServerPlayer.load(this);
 
         new InitializeUtils(new ShowMultipleTasks(this), "consegne").initialize();
         new InitializeUtils(new ShowSingleTasks(), "richieste").initialize();

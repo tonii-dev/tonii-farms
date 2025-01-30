@@ -3,8 +3,11 @@ package io.github.toniidev.toniifarms.classes.server;
 import io.github.toniidev.toniifarms.classes.tasks.GameTask;
 import io.github.toniidev.toniifarms.classes.tasks.MultipleTask;
 import io.github.toniidev.toniifarms.classes.tasks.SingleTask;
+import io.github.toniidev.toniifarms.database.DatabaseItem;
+import io.github.toniidev.toniifarms.database.DatabaseManager;
 import io.github.toniidev.toniifarms.factories.InventoryFactory;
 import io.github.toniidev.toniifarms.factories.MultipleInventoryFactory;
+import io.github.toniidev.toniifarms.utils.InitializeUtils;
 import io.github.toniidev.toniifarms.utils.InventoryUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -13,15 +16,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
-public class ServerPlayer {
+public class ServerPlayer extends DatabaseItem<ServerPlayer> {
     private static final List<ServerPlayer> players = new ArrayList<>();
 
-    private final UUID playerId;
-    private final Plugin plugin;
+    private UUID playerId;
+    private Plugin plugin;
+    private String displayName;
 
     private int maxSingleTasks = 3;
     private final List<SingleTask> singleTasks = new ArrayList<>();
@@ -38,10 +45,29 @@ public class ServerPlayer {
      * @param plugin The main plugin instance.
      */
     public ServerPlayer(Player player, Plugin plugin) {
+        super(plugin, "players", ServerPlayer.getPlayers());
         this.playerId = player.getUniqueId();
         this.plugin = plugin;
+        this.displayName = player.getDisplayName();
 
+        this.save();
         startTaskLoops();
+    }
+
+    public UUID getPlayerId() {
+        return playerId;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public ServerPlayer(){
+        super(InitializeUtils.mainInstance, null, null);
     }
 
     /**
@@ -51,6 +77,7 @@ public class ServerPlayer {
      */
     public ServerPlayer increaseMaxSingleTaskAmount() {
         this.maxSingleTasks++;
+        this.save();
         return this;
     }
 
@@ -61,6 +88,7 @@ public class ServerPlayer {
      */
     public ServerPlayer increaseMaxMultipleTaskAmount() {
         this.maxMultipleTasks++;
+        this.save();
         return this;
     }
 
@@ -117,6 +145,7 @@ public class ServerPlayer {
                     // If the task is unique, add it to the task list
                     if (isUnique) {
                         taskList.add(newTask);
+                        save();
                     }
                 }
             }
@@ -136,7 +165,7 @@ public class ServerPlayer {
      * @return The global list of all ServerPlayer instances.
      */
     public static List<ServerPlayer> getPlayers() {
-        return Collections.unmodifiableList(players);
+        return players;
     }
 
     /**
@@ -147,7 +176,14 @@ public class ServerPlayer {
      */
     public static ServerPlayer getInstance(Player player) {
         return players.stream()
-                .filter(serverPlayer -> serverPlayer.getPlayer() != null && serverPlayer.getPlayer().equals(player))
+                .filter(serverPlayer -> serverPlayer.getPlayer() != null && serverPlayer.getPlayerId().equals(player.getUniqueId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public static ServerPlayer getInstance(UUID uuid){
+        return players.stream()
+                .filter(serverPlayer -> serverPlayer.getPlayer() != null && serverPlayer.getPlayerId().equals(uuid))
                 .findFirst()
                 .orElse(null);
     }
@@ -180,17 +216,17 @@ public class ServerPlayer {
     }
 
     /**
-     * @return An unmodifiable list of single tasks.
+     * @return The list of single tasks.
      */
     public List<SingleTask> getSingleTasks() {
-        return Collections.unmodifiableList(singleTasks);
+        return singleTasks;
     }
 
     /**
-     * @return An unmodifiable list of multiple tasks.
+     * @return The list of multiple tasks.
      */
     public List<MultipleTask> getMultipleTasks() {
-        return Collections.unmodifiableList(multipleTasks);
+        return multipleTasks;
     }
 
     /**
@@ -289,7 +325,7 @@ public class ServerPlayer {
                     task.complete((Player) e.getWhoClicked());
                 });
 
-        return new MultipleInventoryFactory(items, factory, plugin)
+        return new MultipleInventoryFactory(items, factory)
                 .get();
     }
 
@@ -316,7 +352,7 @@ public class ServerPlayer {
                     task.complete((Player) e.getWhoClicked());
                 });
 
-        return new MultipleInventoryFactory(items, factory, plugin)
+        return new MultipleInventoryFactory(items, factory)
                 .get();
     }
 
@@ -373,5 +409,34 @@ public class ServerPlayer {
             multipleTasks.remove(multipleTask);
         }
         return this;
+    }
+
+    /**
+     * Loads data from the database.
+     * @param plugin The plugin instance.
+     */
+    public static void load(Plugin plugin) {
+        try {
+            List<ServerPlayer> loadedPlayers = DatabaseManager.load(new File(plugin.getDataFolder(), "players.db"), ServerPlayer.class);
+            ServerPlayer.getPlayers().addAll(loadedPlayers);
+        } catch (SQLException | InstantiationException | IllegalAccessException | IOException e) {
+            throw new RuntimeException("Failed to load players from database", e);
+        }
+    }
+
+    public void setPlayerId(UUID playerId) {
+        this.playerId = playerId;
+    }
+
+    public void setMaxSingleTasks(int maxSingleTasks) {
+        this.maxSingleTasks = maxSingleTasks;
+    }
+
+    public void setMaxMultipleTasks(int maxMultipleTasks) {
+        this.maxMultipleTasks = maxMultipleTasks;
+    }
+
+    public void setMoney(double money) {
+        this.money = money;
     }
 }
